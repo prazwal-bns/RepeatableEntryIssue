@@ -13,4 +13,9 @@ class Post extends Model
         'education_histories',
     ];
 
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
+    }
+
 }

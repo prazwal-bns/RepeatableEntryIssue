@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Posts\Schemas;
 
+use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;
 
@@ -24,6 +25,13 @@ class PostInfolist
                 TextEntry::make('updated_at')
                     ->dateTime()
                     ->placeholder('-'),
+
+                RepeatableEntry::make('comments')
+                    // ->relationship('comments')
+                    ->schema([
+                        TextEntry::make('content'),
+                        TextEntry::make('author_name'),
+                    ]),
             ]);
     }
 }
