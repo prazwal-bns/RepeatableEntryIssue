@@ -4,10 +4,15 @@ namespace App\Filament\Resources\Posts\Schemas;
 
 use App\Filament\Resources\Comments\Schemas\CommentForm;
 use Filament\Actions\Action;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\Component;
+use Filament\Schemas\Components\Group;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 
@@ -17,50 +22,99 @@ class PostInfolist
     {
         return $schema
             ->components([
-                TextEntry::make('title'),
-                TextEntry::make('content')
-                    ->columnSpanFull(),
-                TextEntry::make('author'),
-                TextEntry::make('education_histories')
-                    ->placeholder('-')
-                    ->columnSpanFull(),
-                TextEntry::make('created_at')
-                    ->dateTime()
-                    ->placeholder('-'),
-                TextEntry::make('updated_at')
-                    ->dateTime()
-                    ->placeholder('-'),
-
-                RepeatableEntry::make('comments')
-                    ->columns(4)
+                Section::make('Post Information')
+                    ->collapsible()
                     ->schema([
-                        TextEntry::make('content')
-                            ->label('Content'),
-                        TextEntry::make('author_name')
-                            ->label('Author'),
-                        Action::make('edit')
-                            ->link()
-                            ->label('Edit')
-                            ->button()
-                            ->icon(Heroicon::OutlinedPencilSquare)
-                            ->schema(CommentForm::configure(new Schema())->getComponents())
-                            ->action(function($data,$record){
-                                $record->update($data);
-                            })
-                            ->mountUsing(function (Schema $schema, $record) {
-                                return $schema->fill([
-                                    'content' => $record->content,
-                                    'author_name' => $record->author_name,
-                                ]);
+                        TextEntry::make('title'),
+                        TextEntry::make('content'),
+                        TextEntry::make('author'),
+                        TextEntry::make('education_histories')
+                            ->placeholder('-'),
+                        TextEntry::make('created_at')
+                            ->dateTime()
+                            ->placeholder('-'),
+                        TextEntry::make('updated_at')
+                            ->dateTime()
+                            ->placeholder('-'),
+                    ])
+                ->columnSpanFull()
+                ->columns(3),
+
+                Section::make('Comments')
+                    ->collapsible()
+                    // ->collapsed()
+                    ->icon(Heroicon::OutlinedChatBubbleLeft)
+                    ->headerActions([
+                        Action::make('create_comment')
+                            ->label('Create')
+                            ->color('gray')
+                            ->schema([
+                                Textarea::make('content')
+                                    ->required()
+                                    ->columnSpanFull(),
+                                TextInput::make('author_name')
+                                    ->required(),
+                            ])
+                            ->modalHeading('Create Comment')
+                            ->icon(Heroicon::OutlinedPlus)
+                            ->action(function ($data, $record) {
+                                $record->comments()->create($data);
                             }),
-                        Action::make('delete')
-                            ->label('Delete')
-                            ->outlined()
-                            ->requiresConfirmation()
-                            ->icon(Heroicon::OutlinedTrash)
-                            ->action(function($record){
-                                $record->delete();
-                            }),
+                    ])
+                    ->schema([
+                        RepeatableEntry::make('comments')
+                            ->hiddenLabel()
+                            ->schema([
+                                Group::make([
+                                    Group::make([
+                                        Actions::make([
+                                            Action::make('delete')
+                                                ->label('Delete')
+                                                ->color('danger')
+                                                ->outlined()
+                                                ->requiresConfirmation()
+                                                ->icon(Heroicon::OutlinedTrash)
+                                                ->action(function($record){
+                                                    $record->delete();
+                                                    Notification::make()
+                                                        ->title('Comment deleted')
+                                                        ->success()
+                                                        ->send();
+                                                    
+                                                    $record->refresh();
+
+                                                }),
+                                            Action::make('edit')
+                                                ->link()
+                                                ->color('primary')
+                                                ->label('Edit')
+                                                ->icon(Heroicon::OutlinedPencilSquare)
+                                                ->mountUsing(function (Component $component, Schema $schema) {
+                                                    $comment = $component->getRecord();
+                                                    return $schema->fill([
+                                                        'content' => $comment->content,
+                                                        'author_name' => $comment->author_name,
+                                                    ]);
+                                                })
+                                                ->schema(CommentForm::configure(new Schema())->getComponents())
+                                                ->action(function ($data, Component $component) {
+                                                    $record = $component->getRecord();
+                                                    $record->update($data);
+                                                }),
+                                        ])
+                                            ->columnSpanFull()
+                                            ->alignment('right'),
+                                    ]),
+
+                                    Group::make([
+                                        TextEntry::make('content')
+                                            ->label('Content'),
+                                        TextEntry::make('author_name')
+                                            ->label('Author'),
+                                    ])->columns(['sm' => 1, 'lg' => 2]),
+
+                                ]),
+                            ]),
                     ])
                     ->columnSpanFull(),
             ]);
