@@ -77,6 +77,7 @@ class PostInfolist
                                     Group::make([
                                         Actions::make([
                                             Action::make('delete')
+                                                ->link()
                                                 ->label('Delete')
                                                 ->color('danger')
                                                 ->outlined()
