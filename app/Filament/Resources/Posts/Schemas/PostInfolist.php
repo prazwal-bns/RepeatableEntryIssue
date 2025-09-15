@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Posts\Schemas;
 
+use App\Filament\Resources\Comments\Schemas\CommentForm;
 use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\RepeatableEntry;
@@ -42,10 +43,7 @@ class PostInfolist
                             ->label('Edit')
                             ->button()
                             ->icon(Heroicon::OutlinedPencilSquare)
-                            ->schema([
-                                TextInput::make('content'),
-                                TextInput::make('author_name'),
-                            ])
+                            ->schema(CommentForm::configure(new Schema())->getComponents())
                             ->action(function($data,$record){
                                 $record->update($data);
                             })
