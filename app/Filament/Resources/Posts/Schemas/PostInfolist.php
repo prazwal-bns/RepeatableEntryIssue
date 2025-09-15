@@ -57,14 +57,16 @@ class PostInfolist
                             ])
                             ->modalHeading('Create Comment')
                             ->icon(Heroicon::OutlinedPlus)
-                            ->action(function ($data, $record) {
+                            ->action(function ($data, $record, $livewire) {
                                 $record->comments()->create($data);
-                                $record->refresh();
-                                $record->load('comments');
                                 Notification::make()
                                     ->title('Comment created')
                                     ->success()
                                     ->send();
+                                
+                                // Force refresh the entire record
+                                $livewire->record->refresh();
+                                $livewire->record->load('comments');
                             }),
                     ])
                     ->schema([
@@ -80,15 +82,16 @@ class PostInfolist
                                                 ->outlined()
                                                 ->requiresConfirmation()
                                                 ->icon(Heroicon::OutlinedTrash)
-                                                ->action(function($record){
-                                                    $post = $record->post;
+                                                ->action(function($record, $livewire){
                                                     $record->delete();
-                                                    $post->refresh();
-                                                    $post->load('comments');
                                                     Notification::make()
                                                         ->title('Comment deleted')
                                                         ->success()
                                                         ->send();
+                                                    
+                                                    // Force refresh the entire record
+                                                    $livewire->record->refresh();
+                                                    $livewire->record->load('comments');
                                                 }),
                                             Action::make('edit')
                                                 ->link()
@@ -103,16 +106,17 @@ class PostInfolist
                                                     ]);
                                                 })
                                                 ->schema(CommentForm::configure(new Schema())->getComponents())
-                                                ->action(function ($data, Component $component) {
+                                                ->action(function ($data, Component $component, $livewire) {
                                                     $record = $component->getRecord();
                                                     $record->update($data);
-                                                    $post = $record->post;
-                                                    $post->refresh();
-                                                    $post->load('comments');
                                                     Notification::make()
                                                         ->title('Comment updated')
                                                         ->success()
                                                         ->send();
+                                                    
+                                                    // Force refresh the entire record
+                                                    $livewire->record->refresh();
+                                                    $livewire->record->load('comments');
                                                 }),
                                         ])
                                             ->columnSpanFull()
