@@ -59,6 +59,12 @@ class PostInfolist
                             ->icon(Heroicon::OutlinedPlus)
                             ->action(function ($data, $record) {
                                 $record->comments()->create($data);
+                                $record->refresh();
+                                $record->load('comments');
+                                Notification::make()
+                                    ->title('Comment created')
+                                    ->success()
+                                    ->send();
                             }),
                     ])
                     ->schema([
@@ -75,14 +81,14 @@ class PostInfolist
                                                 ->requiresConfirmation()
                                                 ->icon(Heroicon::OutlinedTrash)
                                                 ->action(function($record){
+                                                    $post = $record->post;
                                                     $record->delete();
+                                                    $post->refresh();
+                                                    $post->load('comments');
                                                     Notification::make()
                                                         ->title('Comment deleted')
                                                         ->success()
                                                         ->send();
-                                                    
-                                                    $record->refresh();
-
                                                 }),
                                             Action::make('edit')
                                                 ->link()
@@ -100,6 +106,13 @@ class PostInfolist
                                                 ->action(function ($data, Component $component) {
                                                     $record = $component->getRecord();
                                                     $record->update($data);
+                                                    $post = $record->post;
+                                                    $post->refresh();
+                                                    $post->load('comments');
+                                                    Notification::make()
+                                                        ->title('Comment updated')
+                                                        ->success()
+                                                        ->send();
                                                 }),
                                         ])
                                             ->columnSpanFull()
