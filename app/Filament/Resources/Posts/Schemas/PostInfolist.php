@@ -2,9 +2,13 @@
 
 namespace App\Filament\Resources\Posts\Schemas;
 
+use Filament\Actions\Action;
+use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Component;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 
 class PostInfolist
 {
@@ -27,11 +31,40 @@ class PostInfolist
                     ->placeholder('-'),
 
                 RepeatableEntry::make('comments')
-                    // ->relationship('comments')
+                    ->columns(4)
                     ->schema([
-                        TextEntry::make('content'),
-                        TextEntry::make('author_name'),
-                    ]),
+                        TextEntry::make('content')
+                            ->label('Content'),
+                        TextEntry::make('author_name')
+                            ->label('Author'),
+                        Action::make('edit')
+                            ->link()
+                            ->label('Edit')
+                            ->button()
+                            ->icon(Heroicon::OutlinedPencilSquare)
+                            ->schema([
+                                TextInput::make('content'),
+                                TextInput::make('author_name'),
+                            ])
+                            ->action(function($data,$record){
+                                $record->update($data);
+                            })
+                            ->mountUsing(function (Schema $schema, $record) {
+                                return $schema->fill([
+                                    'content' => $record->content,
+                                    'author_name' => $record->author_name,
+                                ]);
+                            }),
+                        Action::make('delete')
+                            ->label('Delete')
+                            ->outlined()
+                            ->requiresConfirmation()
+                            ->icon(Heroicon::OutlinedTrash)
+                            ->action(function($record){
+                                $record->delete();
+                            }),
+                    ])
+                    ->columnSpanFull(),
             ]);
     }
 }
